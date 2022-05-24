@@ -36,6 +36,7 @@ async function run() {
         await client.connect();
         const productCollection = client.db('manufacturePart').collection('products');
         const bookingCollectino = client.db("manufacturePart").collection("booking");
+        const userCollectino = client.db("manufacturePart").collection("users");
 
         // api for loading all products
         app.get('/products', async (req, res) => {
@@ -51,6 +52,12 @@ async function run() {
             const query = { _id: ObjectId(id) };
             const product = await productCollection.findOne(query);
             res.send(product);
+        });
+
+        // for loading users 
+        app.get('/user', verifyJWT, async (req, res) => {
+            const users = await userCollectino.find().toArray();
+            res.send(users);
         });
 
         // adding orders
