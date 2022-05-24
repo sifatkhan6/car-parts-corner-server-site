@@ -35,6 +35,7 @@ async function run() {
     try {
         await client.connect();
         const productCollection = client.db('manufacturePart').collection('products');
+        const bookingCollectino = client.db("manufacturePart").collection("booking");
 
         // api for loading all products
         app.get('/products', async (req, res) => {
@@ -50,6 +51,18 @@ async function run() {
             const query = { _id: ObjectId(id) };
             const product = await productCollection.findOne(query);
             res.send(product);
+        });
+
+        // adding orders
+        app.post('/booking', async (req, res) => {
+            const booking = req.body;
+            const query = { treatment: booking.treatment, date: booking.date, patient: booking.patient };
+            const exist = await bookingCollectino.findOne(query);
+            if (exist) {
+                return res.send({ success: false, booking: exist });
+            }
+            const result = await bookingCollectino.insertOne(booking);
+            return res.send({ success: true, result });
         });
     }
     finally {
