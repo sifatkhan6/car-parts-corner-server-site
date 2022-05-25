@@ -60,16 +60,44 @@ async function run() {
             res.send(users);
         });
 
+        // for getting all the booking orders
+        app.get('/booking', verifyJWT, async (req, res) => {
+            const clientEmail = req.query.clientEmail;
+            const decodedEmail = req.decoded.email;
+            if (clientEmail === decodedEmail) {
+                const query = { clientEmail: clientEmail };
+                const booking = await bookingCollectino.find(query).toArray();
+                return res.send(booking);
+            }
+            else {
+                return res.status(403).send({ message: 'Forbidden Access' });
+            }
+        });
+
         // adding orders
         app.post('/booking', async (req, res) => {
             const booking = req.body;
-            const query = { treatment: booking.treatment, date: booking.date, patient: booking.patient };
+            const query = { productID: booking.productID, quantity: booking.quantity, clientEmail: booking.clientEmail };
             const exist = await bookingCollectino.findOne(query);
             if (exist) {
                 return res.send({ success: false, booking: exist });
             }
             const result = await bookingCollectino.insertOne(booking);
             return res.send({ success: true, result });
+        });
+
+        // adding user to database
+        app.put('/user/:email', async (req, res) => {
+            const email = req.params.email;
+            const user = req.body;
+            const filter = { email: email };
+            const options = { upsert: true };
+            const updateDoc = {
+                $set: user,
+            };
+            const result = await userCollectino.updateOne(filter, updateDoc, options);
+            const token = jwt.sign({ email: email }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: 60 * 60 })
+            res.send({ result, token });
         });
     }
     finally {
