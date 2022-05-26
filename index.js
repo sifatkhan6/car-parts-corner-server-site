@@ -66,10 +66,18 @@ async function run() {
             const user = await userCollectino.findOne({ email: email });
             const isAdmin = user.role === 'admin';
             res.send({ admin: isAdmin });
-        })
+        });
+
+        // getting all the booking 
+        app.get('/booking', async (req, res) => {
+            const query = {};
+            const cursor = bookingCollectino.find(query);
+            const product = await cursor.toArray();
+            res.send(product);
+        });
 
         // for getting all the booking orders
-        app.get('/booking', verifyJWT, async (req, res) => {
+        app.get('/booking/:email', verifyJWT, async (req, res) => {
             const clientEmail = req.query.clientEmail;
             const decodedEmail = req.decoded.email;
             if (clientEmail === decodedEmail) {
@@ -131,6 +139,19 @@ async function run() {
             else {
                 res.status(403).send({ message: 'Forbidden Request. You are not an Admin...' })
             }
+        });
+
+        // updating profile 
+        app.put('/updateProfile/:email', async (req, res) => {
+            const email = req.params.email;
+            const profile = req.body;
+            const filter = { email: email };
+            const options = { upsert: true };
+            const updateDoc = {
+                $set: profile,
+            };
+            const result = await userCollectino.updateOne(filter, updateDoc, options);
+            res.send({ result });
         });
     }
     finally {
