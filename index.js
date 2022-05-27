@@ -47,6 +47,14 @@ async function run() {
             res.send(product);
         });
 
+        // for loading reviews
+        app.get('/review', async(req, res) => {
+            const query = {};
+            const cursor = reviewCollectino.find(query);
+            const review = await cursor.toArray();
+            res.send(review);
+        });
+
         // loading single product 
         app.get('/singleProduct', async (req, res) => {
             const query = {};
