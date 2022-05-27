@@ -37,6 +37,7 @@ async function run() {
         const productCollection = client.db('manufacturePart').collection('products');
         const bookingCollectino = client.db("manufacturePart").collection("booking");
         const userCollectino = client.db("manufacturePart").collection("users");
+        const reviewCollectino = client.db("manufacturePart").collection("reviews");
 
         // api for loading all products
         app.get('/products', async (req, res) => {
@@ -45,6 +46,15 @@ async function run() {
             const product = await cursor.toArray();
             res.send(product);
         });
+
+        // loading single product 
+        app.get('/singleProduct', async (req, res) => {
+            const query = {};
+            const cursor = productCollection.find(query).project({name: 1});
+            const product = await cursor.toArray();
+            res.send(product);
+        });
+
 
         // get products by id 
         app.get('/products/:id', async (req, res) => {
@@ -58,6 +68,14 @@ async function run() {
         app.get('/user', verifyJWT, async (req, res) => {
             const users = await userCollectino.find().toArray();
             res.send(users);
+        });
+
+        // showing user profile
+        app.get('/showUpdateProfile/:email',  async (req, res) => {
+            const userEmail = req.params.email;
+            const query = { email: userEmail };
+            const user = await userCollectino.find(query).toArray();
+            res.send(user);
         });
 
         // searching admin 
@@ -88,6 +106,13 @@ async function run() {
             else {
                 return res.status(403).send({ message: 'Forbidden Access' });
             }
+        });
+
+        // adding review 
+        app.post('/review', async (req, res) => {
+            const review = req.body;
+            const result = await reviewCollectino.insertOne(review);
+            res.send({success: true, result});
         });
 
         // adding new product by admin 
@@ -151,7 +176,7 @@ async function run() {
                 $set: profile,
             };
             const result = await userCollectino.updateOne(filter, updateDoc, options);
-            res.send({ result });
+            return res.send({ success: true, result });
         });
     }
     finally {
