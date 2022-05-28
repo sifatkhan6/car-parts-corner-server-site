@@ -6,6 +6,7 @@ const res = require('express/lib/response');
 const query = require('express/lib/middleware/query');
 const port = process.env.PORT || 5000;
 require('dotenv').config();
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 
 const app = express();
 
@@ -48,7 +49,7 @@ async function run() {
         });
 
         // for loading reviews
-        app.get('/review', async(req, res) => {
+        app.get('/review', async (req, res) => {
             const query = {};
             const cursor = reviewCollectino.find(query);
             const review = await cursor.toArray();
@@ -58,7 +59,7 @@ async function run() {
         // loading single product 
         app.get('/singleProduct', async (req, res) => {
             const query = {};
-            const cursor = productCollection.find(query).project({name: 1});
+            const cursor = productCollection.find(query).project({ name: 1 });
             const product = await cursor.toArray();
             res.send(product);
         });
@@ -75,15 +76,16 @@ async function run() {
         // for loading users 
         app.get('/user', verifyJWT, async (req, res) => {
             const users = await userCollectino.find().toArray();
+            console.log(users);
             res.send(users);
         });
 
         // showing user profile
-        app.get('/showUpdateProfile/:email',  async (req, res) => {
+        app.get('/showUpdateProfile/:email', async (req, res) => {
             const userEmail = req.params.email;
             const query = { email: userEmail };
             const user = await userCollectino.find(query).toArray();
-            res.send(user);
+            res.send({success: true, user});
         });
 
         // searching admin 
@@ -102,6 +104,14 @@ async function run() {
             res.send(product);
         });
 
+        // getting booking by ID for payment 
+        app.get('/payment/:id',verifyJWT, async (req, res) => {
+            const id = req.params.id;
+            const query = {_id: ObjectId(id)};
+            const paymentBooking = await bookingCollectino.findOne(query);
+            res.send(paymentBooking);
+        });
+
         // for getting all the booking orders
         app.get('/booking/:email', verifyJWT, async (req, res) => {
             const clientEmail = req.query.clientEmail;
@@ -116,11 +126,24 @@ async function run() {
             }
         });
 
+        // payment intent 
+        app.post('/create-payment-intent', verifyJWT, async (req, res) => {
+            const product = req.body;
+            const price = product.price;
+            const amount = price * 100;
+            const paymentIntent = await stripe.paymentIntents.create({
+                amount: amount,
+                currency: 'usd',
+                payment_method_types: ['card']
+            });
+            res.send({clientSecret: paymentIntent.client_secret})
+        });
+
         // adding review 
         app.post('/review', async (req, res) => {
             const review = req.body;
             const result = await reviewCollectino.insertOne(review);
-            res.send({success: true, result});
+            res.send({ success: true, result });
         });
 
         // adding new product by admin 
