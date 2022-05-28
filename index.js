@@ -39,6 +39,7 @@ async function run() {
         const bookingCollectino = client.db("manufacturePart").collection("booking");
         const userCollectino = client.db("manufacturePart").collection("users");
         const reviewCollectino = client.db("manufacturePart").collection("reviews");
+        const paymentCollectino = client.db("manufacturePart").collection("payments");
 
         // api for loading all products
         app.get('/products', async (req, res) => {
@@ -208,6 +209,22 @@ async function run() {
             };
             const result = await userCollectino.updateOne(filter, updateDoc, options);
             return res.send({ success: true, result });
+        });
+
+        // updating payment status 
+        app.patch('/payment-update/:id', verifyJWT, async (req, res) => {
+            const id = req.params.id;
+            const payment = req.body;
+            const filter = {_id: ObjectId(id)};
+            const updatedDoc = {
+                $set: {
+                    paid: true,
+                    transactionId: payment.transactionId,
+                }
+            }
+            const result = await paymentCollectino.insertOne(payment);
+            const updateBooking = await bookingCollectino.updateOne(filter, updatedDoc);
+            res.send(updatedDoc);
         });
     }
     finally {
