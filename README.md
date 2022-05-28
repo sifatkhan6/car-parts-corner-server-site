@@ -1,7 +1,7 @@
 # Luxury Car Parts Corner Server Side
 
 ### Live site link
-
+https://sunny-medovik-11f4a8.netlify.app
 
 ### Private repo client side link
 https://github.com/programming-hero-web-course1/manufacturer-website-server-side-sifatkhan6
