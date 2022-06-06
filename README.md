@@ -3,9 +3,6 @@
 ### Live site link
 https://sunny-medovik-11f4a8.netlify.app
 
-### Private repo client site link
-
-
 ## What I have in this project
 - install react app
 - using react router
